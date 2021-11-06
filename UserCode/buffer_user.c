@@ -55,8 +55,6 @@ long enqueue_buffer_421(char * data) {
 	
 	int value; // Gets value of FILL count
 	
-	// Lock Mutex for writing
-	sem_wait(&mutex);
 	
 	if (!buffer.write) {
 		printf("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -73,15 +71,20 @@ long enqueue_buffer_421(char * data) {
 		return -1;
 	}
 	
-	memcpy(buffer.write->data, data, DATA_LENGTH);
-	// Advance the pointer.
-	buffer.write = buffer.write->next;
-	buffer.length++;
-	
 	// Up FILL semaphore, lower EMPTY semaphore
 	sem_post(&fill_count);
 	sem_wait(&empty_count);
 	
+	// Lock Mutex for writing
+	sem_wait(&mutex);
+	
+	memcpy(buffer.write->data, data, DATA_LENGTH);
+	
+	// Advance the pointer.
+	buffer.write = buffer.write->next;
+	buffer.length++;
+	
+
 	// Release Mutex
 	sem_post(&mutex);
 
@@ -93,14 +96,10 @@ long dequeue_buffer_421(char * data) {
 	
 	int value; // Gets value of EMPTY count
 	
-	// Lock Mutex for writing
-	sem_wait(&mutex);
 	
 	if (!buffer.read) {
 		printf("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
 		
-		// Only needed if locking mutex before
-		sem_post(&mutex);
 		return -1;
 	}
 	
@@ -111,6 +110,14 @@ long dequeue_buffer_421(char * data) {
 		return -1;
 	}
 	
+	// Lower FILL semaphore, up EMPTY semaphore
+	sem_post(&empty_count);
+	sem_wait(&fill_count);
+	
+	
+	// Lock Mutex for WRITING
+	sem_wait(&mutex);
+	
 	memcpy(data, buffer.read->data, DATA_LENGTH);
 	
 	// Free memory in buffer
@@ -120,14 +127,8 @@ long dequeue_buffer_421(char * data) {
 	buffer.read = buffer.read->next;
 	buffer.length--;
 	
-	// Lower FILL semaphore, up EMPTY semaphore
-	sem_post(&empty_count);
-	sem_wait(&fill_count);
-	
 	// Release Mutex
 	sem_post(&mutex);
-
-	return 0;
 	
 	return 0;
 }
