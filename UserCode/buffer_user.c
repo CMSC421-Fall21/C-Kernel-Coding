@@ -12,6 +12,10 @@ static sem_t fill_count;
 static sem_t empty_count;
 
 long init_buffer_421(void) {
+	
+	//TEST CODE
+	printf("INSIDE INIT BUFFER\n");
+
 	// Note: You will need to initialize semaphores in this function.
 	// Ensure we're not initializing a buffer that already exists.
 	if (buffer.read || buffer.write) {
