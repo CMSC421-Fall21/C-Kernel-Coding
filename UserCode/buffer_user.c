@@ -11,6 +11,10 @@ static sem_t mutex;
 static sem_t fill_count;
 static sem_t empty_count;
 
+// Test code
+int numberOfInserts = 0;
+int numberOfReads = 0;
+
 long init_buffer_421(void) {
 	
 	//TEST CODE
@@ -54,7 +58,7 @@ long enqueue_buffer_421(char * data) {
 	// NOTE: You have to modify this function to use semaphores.
 	
 	int value; // Gets value of FILL count
-	
+	float randomNum; // Gets a random waittime
 	
 	if (!buffer.write) {
 		printf("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -66,9 +70,11 @@ long enqueue_buffer_421(char * data) {
 	
 	sem_getvalue(&fill_count,&value);
 	
-	if( value == SIZE_OF_BUFFER){
-		printf("enqueue_buffer_421(): The buffer is full. Aborting\n");
-		return -1;
+	while( value == SIZE_OF_BUFFER){
+		srand((unsigned int)time(NULL));
+		randomNum = (float)rand()/(float)(RAND_MAX) * 1.0;
+		sleep(randomNum);
+		sem_getvalue(&fill_count,&value);
 	}
 	
 	// Up FILL semaphore, lower EMPTY semaphore
@@ -84,6 +90,8 @@ long enqueue_buffer_421(char * data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 	
+	// TEST CODE
+	numberOfInserts++;
 
 	// Release Mutex
 	sem_post(&mutex);
@@ -95,7 +103,7 @@ long dequeue_buffer_421(char * data) {
 	// NOTE: Implement this function.
 	
 	int value; // Gets value of EMPTY count
-	
+	float randomNum; // Gets a random waittime
 	
 	if (!buffer.read) {
 		printf("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -105,9 +113,11 @@ long dequeue_buffer_421(char * data) {
 	
 	sem_getvalue(&empty_count,&value);
 	
-	if( value == SIZE_OF_BUFFER){
-		printf("dequeue_buffer_421(): The buffer is empty. Aborting\n");
-		return -1;
+	while( value == SIZE_OF_BUFFER){
+		srand((unsigned int)time(NULL));
+		randomNum = (float)rand()/(float)(RAND_MAX) * 1.0;
+		sleep(randomNum);
+		sem_getvalue(&empty_count,&value);
 	}
 	
 	// Lower FILL semaphore, up EMPTY semaphore
@@ -126,6 +136,9 @@ long dequeue_buffer_421(char * data) {
 	// Advance the pointer.
 	buffer.read = buffer.read->next;
 	buffer.length--;
+	
+	// TEST CODE
+	numberOfReads++;
 	
 	// Release Mutex
 	sem_post(&mutex);
@@ -175,4 +188,13 @@ void print_semaphores(void) {
 	sem_getvalue(&empty_count, &value);
 	printf("sem_t empty_count = %d\n", value);
 	return;
+}
+
+
+// Test Code
+void print_global(void){
+
+	printf("This is the number of inserts in PRODUCER: %i\n",numberOfInserts);
+	printf("This is the number of reads in CONSUMER: %i\n",numberOfReads);
+
 }

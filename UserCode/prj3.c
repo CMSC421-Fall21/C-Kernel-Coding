@@ -11,6 +11,7 @@
 // NUMBER OF INSERTS
 int NUM_INSERTS = 100000;
 
+
 // BYTES OF DATA, 1024 BYTES EACH
 char numArray[10][1024];
 
@@ -47,7 +48,7 @@ void *random_insert( void *arg){
    			isError = enqueue_buffer_421( numArray[ i%10 ] );
    		}
    		
-   		printf("ENQUEUE SUCCESS! \n");
+   		//printf("ENQUEUE SUCCESS! \n");
    		
    	} // End of for loop
 
@@ -87,7 +88,7 @@ void *random_read( void *arg){
    			
    		}
 		
-		printf("DEQUEUE SUCCESS! \n");
+		//printf("DEQUEUE SUCCESS! \n");
 		
 		howManyReads++;
 	}
@@ -126,6 +127,9 @@ int main(){
 	pthread_join(readThread, NULL);
 	
 	printf("Threads are done\n");
+	
+	// TEST CODE TO PRINT GLOBAL Producers and Consumers
+	print_global();
 	
 	// Delete Buffer
 	rv = delete_buffer_421();

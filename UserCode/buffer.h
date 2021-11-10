@@ -31,6 +31,7 @@ long enqueue_buffer_421(char *data);
 long dequeue_buffer_421(char *data);
 long delete_buffer_421(void);
 void print_semaphores(void);
+void print_global(void);
 #endif
 
 #ifdef __cplusplus
