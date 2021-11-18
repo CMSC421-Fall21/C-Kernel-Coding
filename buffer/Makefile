@@ -1,1 +1,1 @@
-obj-y := prj3.o
+obj-y := buffer.o

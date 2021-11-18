@@ -47,18 +47,19 @@ return syscall(__NR_delete_buffer_421);
 int main(int argc, char *argv[]) {
 
 
-int NUM_INSERTS = 100000;	// NUMBER OF INSERTS
+int NUM_INSERTS = 10;		// NUMBER OF INSERTS
 char numArray[10][1024];	// BYTES OF DATA, 1024 BYTES EACH
 long rv; 			// Used for syscall error
+char charValue;
+char *data;
 
 // For Loop to memset 1024 byte data, from 0-9 into global array
 	for(int j=0; j<10; j++){
 		charValue = j + '0';
-		memset(numArray[j], charValue, sizeof(numArray[j]));
+		memset(numArray[j], charValue, sizeof(numArray[0]));
 	}
 
-char* data = malloc(2*sizeof(char*));
-memcpy(data,"a",1);
+printf("This is numarray%s\n",numArray[1]);
 
 //
 // Init buffer test
@@ -74,28 +75,41 @@ else {
 
 
 // TO DO MAKE FOR LOOP
-//
 // Enqueue buffer test
-rv = enqueue_buffer_421_syscall(data);
-if(rv < 0) {
-	perror("enqueue_buffer_421 syscall failed");
-}
+for(int i = 0; i<NUM_INSERTS; i++){
+	
+	data = numArray[i%10];
+	
+	//Test code
+	//printf("Data sent was %s\n",data);
+	
+	rv = enqueue_buffer_421_syscall(data);
+	if(rv < 0) {
+		perror("enqueue_buffer_421 syscall failed");
+	}
 
-else {
-	printf("enqueue_buffer_421 ran successfully, check dmesg output\n");
+	else {
+		printf("enqueue_buffer_421 ran successfully, check dmesg output\n");
 	}
 
 
-// TO DO MAKE WHILE LOOP
-//
-// Dequeue buffer test
-rv = dequeue_buffer_421_syscall(data);
-if(rv < 0) {
-	perror("dequeue_buffer_421 syscall failed");
 }
 
-else {
-	printf("dequeue_buffer_421 ran successfully, check dmesg output\n");
+// TO DO MAKE WHILE LOOP
+// Dequeue buffer test
+for(int i = 0; i<NUM_INSERTS; i++){
+	
+	rv = dequeue_buffer_421_syscall(data);
+	if(rv < 0) {
+		perror("dequeue_buffer_421 syscall failed");
+	}
+
+	else {
+		printf("dequeue_buffer_421 ran successfully, check dmesg output\n");
+		
+		//Test code:
+		printf("data returned was %s\n",data);
+	}
 }
 
 
