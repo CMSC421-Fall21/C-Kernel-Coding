@@ -1,3 +1,5 @@
+//Names - William Atkins, Mariah Qureshi
+//Professor - Tompkins
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -15,13 +17,14 @@ long init_buffer_421_syscall();
 long enqueue_buffer_421_syscall(char *data);
 long dequeue_buffer_421_syscall(char *data);
 long delete_buffer_421_syscall();
-void *random_insert(void *arg);
-void *random_read(void *arg);
+void random_insert();//(void *arg);
+void random_read();//(void *arg);
 
 int NUMBER_INSERTS = 10;      // NUMBER OF TIMES FOR THE ARRAY
 int NUM_INSERTS = 10;		// NUMBER OF INSERTS
 char numArray[10][1024];	// BYTES OF DATA, 1024 BYTES EACH
-//
+char Capdata = 'h';
+
 // Init buffer function -> syscall
 long init_buffer_421_syscall() {
 return syscall(__NR_init_buffer_421);
@@ -46,7 +49,7 @@ return syscall(__NR_delete_buffer_421);
 }
 
 //threading - random_insert & random_read
-void *random_insert(void *arg) {
+void random_insert() {//void *arg) {
   char *data;
   long rv;
   for(int j=0; j<NUMBER_INSERTS; j++) {
@@ -62,15 +65,17 @@ void *random_insert(void *arg) {
   //return; // printf("hello");
 }
 
-void *random_read(void *arg) {
-  char *data = NULL;
+void random_read() {//void *arg) {
+  char *readData; // = NULL;
   long rv;
   for(int i = 0; i<NUMBER_INSERTS; i++) {
-    rv = dequeue_buffer_421_syscall(data);
+    rv = dequeue_buffer_421_syscall(readData);
     if (rv < 0) {
       perror("dequeue_buffer_421_syscall failed.");
     } else {
-      printf("data returned was %10s\n", data);
+      printf("data returned was %10s\n", readData);
+      //free(readData);
+      printf("\n");
     }
   }
   //pthread_exit(0);
@@ -101,12 +106,15 @@ else {
   printf("init_buffer_421 ran successfully, check dmesg output\n");
  }
 
- pthread_create(&writeThread, NULL, random_insert, NULL);
+ random_insert();
+ random_read();
+ 
+/*pthread_create(&writeThread, NULL, random_insert, NULL);
  pthread_create(&readThread, NULL, random_read, NULL);
  pthread_join(writeThread, NULL);
  pthread_join(readThread, NULL);
  printf("Threads are done\n");
- 
+*/
 // Delete buffer test
 rv = delete_buffer_421_syscall();
 if(rv < 0) {
@@ -116,8 +124,6 @@ if(rv < 0) {
 else {
 	printf("delete_buffer_421 ran successfully, check dmesg output\n");
 }
-
-
 
  return 0;
 

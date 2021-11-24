@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS  = -g -pthread
+CFLAGS  = -g -Wall 
  
 TARGET = test
 

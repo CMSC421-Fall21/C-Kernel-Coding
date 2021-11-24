@@ -134,6 +134,8 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 	down(&mutex);
 	
 	err = copy_to_user(data, buffer.read->data, DATA_LENGTH);
+	printk(buffer.read->data);
+	
 	// CHECK ERROR
 	if (err < 0){
 		printk("dequeue_buffer_421(): The buffer was not able to copy_to_user. Aborting.\n");
