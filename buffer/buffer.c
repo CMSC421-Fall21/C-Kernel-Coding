@@ -4,7 +4,7 @@
 #include <linux/semaphore.h>
 #include <linux/kernel.h>
 #include <linux/syscalls.h>
-
+#include <linux/math64.h>
 
 static ring_buffer_421_t buffer;
 static struct semaphore mutex;
@@ -57,20 +57,29 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	int randomNum; 		// Gets a random waittime
 	int err;		// Used for error reporting
 	
-	
 	if (!buffer.write) {
 		printk("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
 		
 		return -1;
 	}
 	
-	// lower EMPTY_COUNT semaphore
+	
+	// Try to down EMPTY_COUNT semaphore
 	value = down_trylock(&empty_count);
 	while( value != 0){
 
+		// Get a random Number 1-10;
 		get_random_bytes(&randomNum,sizeof(randomNum));
-		randomNum = randomNum % 100;
-		mdelay(randomNum);
+		
+		if(randomNum < 0)
+			randomNum = randomNum * -1;
+		
+		randomNum %= 10;
+		
+		// Sleep milliseconds 
+		msleep(randomNum);
+		
+		// Try to DOWN empty_count
 		value = down_trylock(&empty_count);
 	}
 	
@@ -80,9 +89,8 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	// Lock Mutex for writing
 	down(&mutex);
 	
-	printk(":: Enqueueing element into buffer. ::\n");
-	
 	err = copy_from_user(buffer.write->data, data, DATA_LENGTH);
+	
 	// CHECK ERROR
 	if (err < 0){
 		printk("enqueue_buffer_421(): The buffer was not able to copy_from_user. Aborting.\n");
@@ -90,8 +98,7 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	}
 	
 	// Get NEW value of NUM_IN_BUFFER
-	printk("%*s",DATA_LENGTH,buffer.write->data);
-	printk("\n%i items in the buffer.\n",fill_count.count);
+	printk(":: Enqueueing element into buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.write->data,fill_count.count);
 	
 	// Advance the pointer.
 	buffer.write = buffer.write->next;
@@ -117,13 +124,23 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 		return -1;
 	}
 	
+	
 	// Try to DOWN fill_count 
 	value = down_trylock(&fill_count);
 	while( value != 0){
 	
+		// Get a random Number 1-10;
 		get_random_bytes(&randomNum,sizeof(randomNum));
-		randomNum = randomNum % 100;
-		mdelay(randomNum);
+		
+		if(randomNum < 0)
+			randomNum = randomNum * -1;
+		
+		randomNum %= 10;
+		
+		// Sleep milliseconds 
+		msleep(randomNum);
+		
+		// Try to DOWN fill_count
 		value = down_trylock(&fill_count);
 	}
 	
@@ -133,8 +150,8 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 	// Lock Mutex for WRITING
 	down(&mutex);
 	
-	err = copy_to_user(data, buffer.read->data, DATA_LENGTH);
-	printk(buffer.read->data);
+	// Copy Data Over
+	err = __copy_to_user(data, buffer.read->data, sizeof(buffer.read->data));
 	
 	// CHECK ERROR
 	if (err < 0){
@@ -142,25 +159,22 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 		return -1;
 	}
 	
+	// Print DEQUEUE Information
+	value = SIZE_OF_BUFFER - empty_count.count;
+	printk(":: Dequeueing element from buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.read->data,value);
+	
 	// Free memory in buffer
 	memset(buffer.read->data, 0, DATA_LENGTH);
 	
-	// Advance the pointer.
+	// Advance the READ pointer
 	buffer.read = buffer.read->next;
 	buffer.length--;
-	
-	// Get NEW value of NUM_IN_BUFFER
-	printk(":: Dequeueing element from buffer. ::\n");
-	
-	value = SIZE_OF_BUFFER - empty_count.count;
-	
-	printk("%s",data);
-	printk("\n%i items in the buffer.\n",value);
 	
 	// Release Mutex
 	up(&mutex);
 
 	return 1;
+	
 }
 
 SYSCALL_DEFINE0(delete_buffer_421){
@@ -191,10 +205,6 @@ SYSCALL_DEFINE0(delete_buffer_421){
 	buffer.read = NULL;
 	buffer.write = NULL;
 	buffer.length = 0;
-	
-	//sema_destroy(&mutex);
-	//sema_destroy(&fill_count);
-	//sema_destroy(&empty_count);
 	
 	return 1;
 }

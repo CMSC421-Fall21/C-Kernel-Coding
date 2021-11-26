@@ -17,83 +17,116 @@ long init_buffer_421_syscall();
 long enqueue_buffer_421_syscall(char *data);
 long dequeue_buffer_421_syscall(char *data);
 long delete_buffer_421_syscall();
-void random_insert();//(void *arg);
-void random_read();//(void *arg);
+void *random_insert(void *arg);
+void *random_read(void *arg);
 
-int NUMBER_INSERTS = 10;      // NUMBER OF TIMES FOR THE ARRAY
+int DATA_SIZE = 1024;
+int NUMBER_INSERTS = 100000;    // NUMBER OF TIMES FOR THE ARRAY
 int NUM_INSERTS = 10;		// NUMBER OF INSERTS
 char numArray[10][1024];	// BYTES OF DATA, 1024 BYTES EACH
-char Capdata = 'h';
 
-// Init buffer function -> syscall
+
+//
+// Init buffer function, call to -> syscall
 long init_buffer_421_syscall() {
-return syscall(__NR_init_buffer_421);
+	return syscall(__NR_init_buffer_421);
 }
 
 //
-// Insert buffer function -> syscall
+// Insert buffer function, call to -> syscall
 long enqueue_buffer_421_syscall(char *data) {
-return syscall(__NR_enqueue_buffer_421,data);
+	return syscall(__NR_enqueue_buffer_421,data);
 }
 
 //
-// Print buffer function -> syscall
+// Print buffer function, call to -> syscall
 long dequeue_buffer_421_syscall(char *data) {
-return syscall(__NR_dequeue_buffer_421,data);
+	return syscall(__NR_dequeue_buffer_421,data);
 }
 
 //
-// Delete buffer function -> syscall
+// Delete buffer function, call to-> syscall
 long delete_buffer_421_syscall() {
-return syscall(__NR_delete_buffer_421);
+	return syscall(__NR_delete_buffer_421);
 }
 
-//threading - random_insert & random_read
-void random_insert() {//void *arg) {
+
+
+//
+// Threading Insert Function to call ENQUEUE_SYSCALL
+void *random_insert(void *arg) {
+
   char *data;
+  int num_of_inserts = 1;
   long rv;
+  
+  
   for(int j=0; j<NUMBER_INSERTS; j++) {
+    
     data = numArray[j%10];
+    
     rv = enqueue_buffer_421_syscall(data);
+    
     if (rv < 0) {
       perror("enqueue_buffer_421 syscall failed.");
-    } else {
-      printf("enqueue_buffer_421 syscall ran successfully, check dmesg output\n");
+    } 
+    
+    else {
+      printf("enqueue_buffer_421 syscall ran successfully, check dmesg output. Number of total inserts: %i\n",num_of_inserts);
+      num_of_inserts++;
     }
-  }
-  //  pthread_exit(0);
-  //return; // printf("hello");
-}
+    
+  } // End of for loop
+  
+ pthread_exit(0);
+ 
+} // end of random_insert
 
-void random_read() {//void *arg) {
-  char *readData; // = NULL;
+
+//
+// Threading Read Function to call DEQUEUE_SYSCALL
+void *random_read(void *arg) {
+
+  char readData[DATA_SIZE];
+  int num_of_reads = 1;
   long rv;
+  
   for(int i = 0; i<NUMBER_INSERTS; i++) {
+  
     rv = dequeue_buffer_421_syscall(readData);
+   
     if (rv < 0) {
       perror("dequeue_buffer_421_syscall failed.");
-    } else {
-      printf("data returned was %10s\n", readData);
-      //free(readData);
+    } 
+    
+    else {
+      printf("dequeue_buffer_421 syscall ran successfully, data: %.10s... Number of total reads: %i", readData, num_of_reads);
+      num_of_reads++;
       printf("\n");
     }
-  }
-  //pthread_exit(0);
-  //return; // printf("hello2");
-}
+    
+  } // end of for loop
+  
+  pthread_exit(0);
+  
+} // end of random_read
 
+
+
+//
 // Main
 int main(int argc, char *argv[]) {
-pthread_t writeThread, readThread;
-long rv; 			// Used for syscall error
-char charValue;
+
+pthread_t writeThread, readThread;	// Used for making write/read threads
+long rv; 				// Used for syscall error
+char charValue;				// Used for making data
 
 // For Loop to memset 1024 byte data, from 0-9 into global array
-	for(int j=0; j<10; j++){
-		charValue = j + '0';
-		memset(numArray[j], charValue, sizeof(numArray[0]));
-	}
-	//printf("This is numarray%s\n",numArray[1]);
+for(int j=0; j<10; j++){
+	charValue = j + '0';
+	memset(numArray[j], charValue, sizeof(numArray[0]));
+}
+	
 
 //
 // Init buffer test
@@ -104,17 +137,16 @@ if(rv < 0) {
 
 else {
   printf("init_buffer_421 ran successfully, check dmesg output\n");
- }
+}
 
- random_insert();
- random_read();
- 
-/*pthread_create(&writeThread, NULL, random_insert, NULL);
- pthread_create(&readThread, NULL, random_read, NULL);
- pthread_join(writeThread, NULL);
- pthread_join(readThread, NULL);
- printf("Threads are done\n");
-*/
+
+// Create threads, then join when completed
+pthread_create(&writeThread, NULL, random_insert, NULL);
+pthread_create(&readThread, NULL, random_read, NULL);
+pthread_join(writeThread, NULL);
+pthread_join(readThread, NULL);
+
+
 // Delete buffer test
 rv = delete_buffer_421_syscall();
 if(rv < 0) {
@@ -125,7 +157,7 @@ else {
 	printf("delete_buffer_421 ran successfully, check dmesg output\n");
 }
 
- return 0;
+return 0;
 
 } // End of main
 
