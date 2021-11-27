@@ -16,13 +16,15 @@ int numberOfReads = 0;			// TOTAL Number of reads
 
 long init_buffer_421(void) {
 	
-	srand((unsigned int)time(NULL));
-	
 	// Note: You will need to initialize semaphores in this function.
 	// Ensure we're not initializing a buffer that already exists.
 	if (buffer.read || buffer.write) {
-		printf("init_buffer_421(): Buffer already exists. Aborting.\n");
+		printf("init_buffer_421(): Buffer already exists. Aborting.\n\n");
 		return -1;
+	}
+	
+	else{
+		srand((unsigned int)time(NULL));
 	}
 
 	// Create the root node.
@@ -66,6 +68,7 @@ long enqueue_buffer_421(char * data) {
 		return -1;
 	}
 	
+	// Inital Sleep
 	randomNum = (float)rand()/(float)(RAND_MAX) / 100.0;
 	sleep(randomNum);
 	
@@ -85,8 +88,10 @@ long enqueue_buffer_421(char * data) {
 	sem_post(&fill_count);
 	sem_wait(&empty_count);
 	
+	// Copy Data
 	memcpy(buffer.write->data, data, DATA_LENGTH);
 	
+	// Print Enqueue info
 	printf(":: Enqueueing element into buffer. ::\n");
 	printf("%.10s...\n",buffer.write->data);
 	sem_getvalue(&fill_count,&value);
@@ -96,7 +101,7 @@ long enqueue_buffer_421(char * data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 	
-	// TEST CODE
+	// Update total number of inserts
 	numberOfInserts++;
 
 	// Release Mutex
@@ -110,7 +115,6 @@ long dequeue_buffer_421(char * data) {
 	
 	int value; // Gets value of EMPTY count
 	float randomNum; // Gets a random waittime
-	time_t t;
 	
 	if (!buffer.read) {
 		printf("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -118,6 +122,7 @@ long dequeue_buffer_421(char * data) {
 		return -1;
 	}
 	
+	// Initial millisecond sleep
 	randomNum = (float)rand()/(float)(RAND_MAX) / 100.0;
 	sleep(randomNum);
 
@@ -137,21 +142,23 @@ long dequeue_buffer_421(char * data) {
 	sem_post(&empty_count);
 	sem_wait(&fill_count);
 	
+	// Copy data back into user
 	memcpy(data, buffer.read->data, DATA_LENGTH);
 	
+	// Print Dequeuing information
    	printf(":: Dequeueing element from buffer. ::\n");
 	printf("%.10s...\n",data);
 	sem_getvalue(&fill_count,&value);
 	printf("%i items in the buffer.\n\n",value);
 	
-	// Free memory in buffer
+	// "Free" memory in buffer
 	memset(buffer.read->data, 0, DATA_LENGTH);
 	
 	// Advance the pointer.
 	buffer.read = buffer.read->next;
 	buffer.length--;
 	
-	// TEST CODE
+	// Update total number of reads
 	numberOfReads++;
 	
 	// Release Mutex
@@ -166,6 +173,7 @@ long delete_buffer_421(void) {
 		printf("delete_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
+	
 	// Get rid of all existing nodes.
 	node_421_t *temp;
 	node_421_t *current = buffer.read->next;
@@ -184,6 +192,7 @@ long delete_buffer_421(void) {
 	buffer.write = NULL;
 	buffer.length = 0;
 	
+	// Destroy mutexes/semaphores
 	sem_destroy(&mutex);
 	sem_destroy(&fill_count);
 	sem_destroy(&empty_count);
@@ -208,7 +217,7 @@ void print_semaphores(void) {
 }
 
 
-// Test Code
+// Prints total number of Producer and Consumer processes
 void print_global(void){
 
 	printf("This is the number of inserts in PRODUCER: %i\n",numberOfInserts);
