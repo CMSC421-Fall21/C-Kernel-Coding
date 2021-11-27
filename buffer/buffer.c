@@ -1,10 +1,16 @@
+//Names - William Atkins, Mariah Qureshi
+//Professor - Tompkins
+//Date - 11/27/2021
+//Project3 - Threading, Ring Buffer, Producer/Consumer, syscalls
+//buffer.c - Functions definitions for the buffer
+//Includes: initializing, deleting, enqueuing, and dequeuing
+
 #include "buffer.h"
 #include <linux/random.h>
 #include <linux/delay.h>
 #include <linux/semaphore.h>
 #include <linux/kernel.h>
 #include <linux/syscalls.h>
-#include <linux/math64.h>
 
 static ring_buffer_421_t buffer;
 static struct semaphore mutex;
@@ -13,10 +19,8 @@ static struct semaphore empty_count;
 
 SYSCALL_DEFINE0(init_buffer_421){
 	
-	// Create the root node.
-	node_421_t *node;
-	node_421_t *curr;
-	int i;
+	node_421_t *node, *curr;	// Temp nodes for intialization
+	int i;				// Used for number of creation
 	
 	// Note: You will need to initialize semaphores in this function.
 	// Ensure we're not initializing a buffer that already exists.
@@ -25,16 +29,16 @@ SYSCALL_DEFINE0(init_buffer_421){
 		return -1;
 	}
 
-	node = (node_421_t *) kmalloc(sizeof(node_421_t),GFP_KERNEL);
 	// Create the rest of the nodes, linking them all together.
-	
-	
+	node = (node_421_t *) kmalloc(sizeof(node_421_t),GFP_KERNEL);
 	curr = node;
+	
 	// Note that we've already created one node, so i = 1.
 	for (i = 1; i < SIZE_OF_BUFFER; i++) {
 		curr->next = (node_421_t *) kmalloc(sizeof(node_421_t),GFP_KERNEL);
 		curr = curr->next;
 	}
+	
 	// Complete the chain.
 	curr->next = node;
 	buffer.read = node;
@@ -57,12 +61,21 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	int randomNum; 		// Gets a random waittime
 	int err;		// Used for error reporting
 	
+	// Check to see if the buffer exists
 	if (!buffer.write) {
 		printk("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
-		
 		return -1;
 	}
 	
+	// Get a random Number 1-10
+	// Intial sleep, 1-10 milliseconds
+	get_random_bytes(&randomNum,sizeof(randomNum));
+	if(randomNum < 0)
+		randomNum = randomNum * -1;
+	randomNum %= 10;
+		
+	// Sleep milliseconds 
+	msleep(randomNum);
 	
 	// Try to down EMPTY_COUNT semaphore
 	value = down_trylock(&empty_count);
@@ -70,10 +83,8 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 
 		// Get a random Number 1-10;
 		get_random_bytes(&randomNum,sizeof(randomNum));
-		
 		if(randomNum < 0)
 			randomNum = randomNum * -1;
-		
 		randomNum %= 10;
 		
 		// Sleep milliseconds 

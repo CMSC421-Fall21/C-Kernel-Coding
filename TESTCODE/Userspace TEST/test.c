@@ -1,3 +1,9 @@
+//Names - William Atkins, Mariah Qureshi
+//Professor - Tompkins
+//Date - 11/27/2021
+//Project3 - Threading, Ring Buffer, Producer/Consumer
+//test.c - This is a test file for Userspace
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "buffer.h"
@@ -5,7 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int NUM_INSERTS = 100;	// NUMBER OF INSERTS
+int NUM_INSERTS = 100000;		// NUMBER OF INSERTS
 char numArray[10][1024];  	// BYTES OF DATA, 1024 BYTES EACH
 
 // Threading Insert

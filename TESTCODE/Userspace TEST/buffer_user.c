@@ -1,3 +1,10 @@
+//Names - William Atkins, Mariah Qureshi
+//Professor - Tompkins
+//Date - 11/27/2021
+//Project3 - Threading, Ring Buffer, Producer/Consumer
+//buffer_user.c - Functions definitions for the buffer
+//Includes: initializing, deleting, enqueuing, and dequeuing
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>

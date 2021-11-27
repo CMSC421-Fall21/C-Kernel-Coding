@@ -1,3 +1,9 @@
+//Names - William Atkins, Mariah Qureshi
+//Professor - Tompkins
+//Date - 11/27/2021
+//Project3 - Threading, Ring Buffer, Producer/Consumer
+//buffer.h - This contains node definitions for the buffer
+
 #ifndef BUFFER_H
 #define BUFFER_H
 
