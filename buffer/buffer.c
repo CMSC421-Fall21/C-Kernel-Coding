@@ -70,6 +70,8 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	// Get a random Number 1-10
 	// Intial sleep, 1-10 milliseconds
 	get_random_bytes(&randomNum,sizeof(randomNum));
+	
+	// absolute and get 0-10
 	if(randomNum < 0)
 		randomNum = randomNum * -1;
 	randomNum %= 10;
@@ -94,9 +96,6 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 		value = down_trylock(&empty_count);
 	}
 	
-	// Up FILL_COUNT semaphore
-	up(&fill_count);
-	
 	// Lock Mutex for writing
 	down(&mutex);
 	
@@ -109,11 +108,14 @@ SYSCALL_DEFINE1(enqueue_buffer_421,char*,data){
 	}
 	
 	// Get NEW value of NUM_IN_BUFFER
-	printk(":: Enqueueing element into buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.write->data,fill_count.count);
+	printk(":: Enqueueing element into buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.write->data,SIZE_OF_BUFFER - empty_count.count);
 	
 	// Advance the pointer.
 	buffer.write = buffer.write->next;
 	buffer.length++;
+	
+	// Up FILL_COUNT semaphore
+	up(&fill_count);
 	
 	// Release Mutex
 	up(&mutex);
@@ -136,27 +138,34 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 	}
 	
 	
-	// Try to DOWN fill_count 
+	// Intial sleep
+	// Get a random Number 
+	get_random_bytes(&randomNum,sizeof(randomNum));
+	
+	// Absolute number	
+	if(randomNum < 0)
+		randomNum = randomNum * -1;
+		
+	// Number 1-10;	
+	randomNum %= 10;
+	
+	// Sleep milliseconds 
+	msleep(randomNum);
+	
 	value = down_trylock(&fill_count);
 	while( value != 0){
 	
 		// Get a random Number 1-10;
+		// Sleep milliseconds 
 		get_random_bytes(&randomNum,sizeof(randomNum));
-		
 		if(randomNum < 0)
 			randomNum = randomNum * -1;
-		
 		randomNum %= 10;
-		
-		// Sleep milliseconds 
 		msleep(randomNum);
 		
-		// Try to DOWN fill_count
 		value = down_trylock(&fill_count);
+		
 	}
-	
-	// up EMPTY semaphore
-	up(&empty_count);
 	
 	// Lock Mutex for WRITING
 	down(&mutex);
@@ -170,9 +179,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 		return -1;
 	}
 	
-	// Print DEQUEUE Information
-	value = SIZE_OF_BUFFER - empty_count.count;
-	printk(":: Dequeueing element from buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.read->data,value);
+	printk(":: Dequeueing element from buffer. ::\n%.10s...\n%i items in the buffer.\n",buffer.read->data,fill_count.count);
 	
 	// Free memory in buffer
 	memset(buffer.read->data, 0, DATA_LENGTH);
@@ -180,6 +187,9 @@ SYSCALL_DEFINE1(dequeue_buffer_421,char*,data){
 	// Advance the READ pointer
 	buffer.read = buffer.read->next;
 	buffer.length--;
+	
+	// up EMPTY semaphore
+	up(&empty_count);
 	
 	// Release Mutex
 	up(&mutex);

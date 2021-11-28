@@ -91,9 +91,8 @@ long enqueue_buffer_421(char * data) {
 	// Lock Mutex for writing
 	sem_wait(&mutex);
 	
-	// Up FILL semaphore, lower EMPTY semaphore
+	// Up FILL semaphore
 	sem_post(&fill_count);
-	sem_wait(&empty_count);
 	
 	// Copy Data
 	memcpy(buffer.write->data, data, DATA_LENGTH);
@@ -104,16 +103,19 @@ long enqueue_buffer_421(char * data) {
 	sem_getvalue(&fill_count,&value);
 	printf("%i items in the buffer.\n\n",value);
 	
+	// lower EMPTY semaphore
+	sem_wait(&empty_count);
+	
 	// Advance the pointer.
 	buffer.write = buffer.write->next;
 	buffer.length++;
 	
 	// Update total number of inserts
 	numberOfInserts++;
-
+	
 	// Release Mutex
 	sem_post(&mutex);
-
+	
 	return 0;
 }
 
@@ -142,12 +144,11 @@ long dequeue_buffer_421(char * data) {
 		sem_getvalue(&empty_count,&value);
 	}
 	
-	// Lock Mutex for WRITING
+	// Lock Mutex for READING
 	sem_wait(&mutex);
 	
-	// Lower FILL semaphore, up EMPTY semaphore
+	// up EMPTY semaphore
 	sem_post(&empty_count);
-	sem_wait(&fill_count);
 	
 	// Copy data back into user
 	memcpy(data, buffer.read->data, DATA_LENGTH);
@@ -155,8 +156,11 @@ long dequeue_buffer_421(char * data) {
 	// Print Dequeuing information
    	printf(":: Dequeueing element from buffer. ::\n");
 	printf("%.10s...\n",data);
-	sem_getvalue(&fill_count,&value);
-	printf("%i items in the buffer.\n\n",value);
+	sem_getvalue(&empty_count,&value);
+	printf("%i items in the buffer.\n\n",20 - value);
+	
+	// Lower FILL semaphore
+	sem_wait(&fill_count);
 	
 	// "Free" memory in buffer
 	memset(buffer.read->data, 0, DATA_LENGTH);

@@ -29,7 +29,7 @@ void *random_read(void *arg);
 int NUM_INSERTS = 10;		// DEFINE data ELEMENTS
 int DATA_SIZE = 1024;		// DEFINE data SIZE
 char numArray[10][1024];	// BYTES OF DATA, 1024 BYTES EACH
-int NUMBER_INSERTS = 100;    // NUMBER of ARRAY inserts/reads
+int NUMBER_INSERTS = 100000;    // NUMBER of ARRAY inserts/reads
 int NUM_OF_INSERTS = 0;		// Counts number of inserts
 int NUM_OF_READS = 0;		// Counts number of inserts
 
@@ -123,7 +123,7 @@ void *random_read(void *arg) {
       
       // Preform countdown before aborting
       while(countdown >= 0){
-      printf("dequeue_buffer_421 could not find buffer...countdown: %i\n",countdown);
+      printf("dequeue_buffer_421 could not find buffer...waiting: %i\n",countdown);
       
       // RETRY dequeue
       rv = dequeue_buffer_421_syscall(readData);

@@ -30,10 +30,12 @@ void *random_insert( void *arg){
         	// Enqueue Process
    		isError = enqueue_buffer_421( numArray[ i%10 ] );
    		
-   		// Check error of enqueue buffer
+   		// Enqueue Error Check
    		if( isError < 0 ){
    			
    			printf("There was a problem enqueuing, aborting thread.\n");
+   		
+   			// Buffer deletion and check
    			rv = delete_buffer_421();
 			if (rv < 0){
 				printf("Unexpected problem in random_insert, delete_buffer...aborting\n");
@@ -66,9 +68,11 @@ void *random_read( void *arg){
 		// Dequeue process
 		isError = dequeue_buffer_421(data);
 		
-		// Error check
+		// Dequeue Error check
    		if ( isError < 0 ){
    			printf("There was a problem dequeuing, aborting thread.\n");
+   			
+   			// Deletion Error Check
    			rv = delete_buffer_421();
    			if (rv < 0){
 				printf("Unexpected problem in random_read, delete_buffer, for loop...aborting\n");
@@ -80,7 +84,7 @@ void *random_read( void *arg){
    			
 	}
 	
-	// Delete Buffer
+	// REGULAR Delete Buffer, and error check
 	rv = delete_buffer_421();
 	if (rv < 0){
 		printf("Unexpected problem in random_read, delete_buffer, end of function...aborting\n");
